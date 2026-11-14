@@ -1,8 +1,4 @@
-# PROYECTO COMPUTACIONAL 3 - GRUPO 25
-# Experimento: distancia recorrida por un autito
-# Codigo basado en las clases de diseno factorial, ANOVA y superficie de respuesta.
-
-# 1. DISENO DEL EXPERIMENTO (codigo de la propuesta)
+# 1. DISENO DEL EXPERIMENTO
 altura <- c(10, 15, 20)
 longitud <- c(40, 60)
 masa <- c(0, 20)
@@ -19,18 +15,15 @@ experimento$orden <- 1:36
 print(experimento)
 
 # 2. DATOS: 36 CORRIDAS + 3 CONFIRMACIONES
-# Guardar el CSV en la misma carpeta que este archivo R.
 datos_completos <- read.csv("resultados_p3_datos.csv")
 datos <- datos_completos[1:36, ]
 confirmacion <- datos_completos[37:39, ]
 
-# Medias de distancia para cada uno de los 12 tratamientos
 medias <- aggregate(distancia_cm ~ altura + longitud + masa,
                    data = datos, FUN = mean)
 print(medias)
 
 # 3. ANOVA FACTORIAL 3 x 2 x 2
-# Se estudian los efectos principales y las interacciones.
 datos$A <- factor(datos$altura)
 datos$B <- factor(datos$longitud)
 datos$C <- factor(datos$masa)
@@ -53,15 +46,12 @@ interaction.plot(datos$B, datos$C, datos$distancia_cm,
 dev.off()
 
 # 5. SUPUESTOS DEL ANOVA
-# Normalidad: Q-Q plot y prueba Shapiro-Wilk.
-# Varianza constante: residuos versus valores ajustados.
 png("supuestos_anova.png", width = 850, height = 700)
 par(mfrow = c(2, 2))
 plot(modelo_anova)
 dev.off()
 print(shapiro.test(residuals(modelo_anova)))
 
-# Independencia: revisar si hay patrones en los residuos segun el orden.
 png("residuos_orden.png", width = 750, height = 450)
 plot(datos$orden, residuals(modelo_anova),
      xlab = "Orden de la corrida", ylab = "Residuo",
@@ -70,8 +60,6 @@ abline(h = 0, lty = 2)
 dev.off()
 
 # 6. SUPERFICIE DE RESPUESTA
-# Variables codificadas como en clases: -1, 0 y +1.
-# Solo la altura tiene tres niveles; por eso solo se incluye altura^2.
 datos$xA <- (datos$altura - 15) / 5
 datos$xB <- (datos$longitud - 50) / 10
 datos$xC <- (datos$masa - 10) / 10
@@ -81,17 +69,12 @@ modelo_superficie <- lm(distancia_cm ~ xA + xB + xC +
                         data = datos)
 print(summary(modelo_superficie))
 
-# Comparacion con el modelo que usa una media para cada tratamiento.
-# Sirve para revisar la falta de ajuste.
 modelo_celdas <- lm(distancia_cm ~ factor(tratamiento), data = datos)
 print(anova(modelo_superficie, modelo_celdas))
 
 # 7. OPTIMIZACION DENTRO DE LA REGION ESTUDIADA
-# En estos datos el coeficiente de altura^2 es positivo: la parabola
-# tiene un minimo. Por eso su maximo esta en un extremo (lamina 29).
 print(coef(modelo_superficie)["I(xA^2)"])
 
-# Evaluamos las 8 esquinas del rango experimental.
 opciones <- expand.grid(altura = c(10, 20),
                         longitud = c(40, 60), masa = c(0, 20))
 opciones$xA <- (opciones$altura - 15) / 5
@@ -134,7 +117,6 @@ cat("\nDISTANCIAS DE CONFIRMACION (cm)\n")
 print(confirmacion$distancia_cm)
 media_confirmacion <- mean(confirmacion$distancia_cm)
 
-# Se compara el promedio confirmado con la prediccion en ese mismo punto.
 punto_confirmacion <- data.frame(
   xA = (confirmacion$altura[1] - 15) / 5,
   xB = (confirmacion$longitud[1] - 50) / 10,
